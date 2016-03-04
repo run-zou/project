@@ -1,4 +1,5 @@
 PWD=$(shell pwd)
+CGI_PATH=$(PWD)/cgi_bin
 SER_BIN=httpd
 SER_SRC=httpd.c
 
@@ -8,19 +9,57 @@ INCLUDE=.
 CC=gcc
 FLAGS=-o
 LDFLAGS=-lpthread#-static
-LIB=
 
 
 .PHONY:all
-all:$(SER_BIN) $(CLI_BIN)
+all:$(SER_BIN) $(CLI_BIN) cgi
 
 $(SER_BIN):$(SER_SRC)
-	$(CC) $(FLAGS) $@ $^ $(LDFLAGS) -D_DEBUG
+	$(CC) $(FLAGS) $@ $^ $(LDFLAGS) #-D_DEBUG_ -g
 
 $(CLI_BIN):$(CLI_SRC)
-	$(CC) $(FLAGS) $@ $^ $(LDFLAGS) -D_DEBUG
+	$(CC) $(FLAGS) $@ $^ $(LDFLAGS) #-D_DEBUG_
 
-.PHONY:clean
+
+
+.PHONY:cgi
+cgi:
+	for name in `echo $(CGI_PATH)`;\
+			do\
+			cd $$name;\
+			make;\
+			cd -;\
+			done
+
+
+
+.PHONY:output
+output:all
+	mkdir  output
+	mkdir -p output/htdocs/cgi_bin
+	cp httpd output
+	cp demo_client output
+	cp -rf conf output
+	cp -rf log output
+	cp start.sh output
+	cp -rf cgi_bin output
+	cp -rf htdocs/* output/htdocs
+	for name in `echo $(CGI_PATH)`;\
+			do\
+			cd $$name;\
+			make output;\
+			cd -;\
+			done
+
+
+
+PHONY:clean
 clean:
-	rm -f $(SER_BIN) $(CLI_BIN)
+	rm -rf $(SER_BIN) $(CLI_BIN) output
+	for name in `echo $(CGI_PATH)`;\
+			do\
+			cd $$name;\
+			make clean;\
+			cd -;\
+			done
 

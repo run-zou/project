@@ -26,6 +26,7 @@ int main(int argc, char *argv[])
 	remote_server.sin_port = htons(port);
 	remote_server.sin_addr.s_addr = inet_addr(argv[1]);
 
+
 	//connect
 	if( connect(sock, (struct sockaddr*)&remote_server, sizeof(remote_server)) < 0 )
 	{
@@ -33,8 +34,14 @@ int main(int argc, char *argv[])
 		exit(2);
 	}
 
-	const char * cmd=argv[4];
+printf("connect success!\n");
+
+	const char *cmd = argv[3];
+
 	int len = strlen(cmd);
+
+printf("cmd:%s\n",cmd);
+
 	ssize_t size = send(sock, cmd, len, 0);
 	if(size <= 0)
 	{
@@ -42,19 +49,28 @@ int main(int argc, char *argv[])
 		close(sock);
 		return 1;
 	}
-	
+
+
+printf("send success!\n");
+
+
 	char buf[1024];
 	memset(buf, '\0', sizeof(buf));
-	
+
+
 	while( recv(sock, buf, sizeof(buf)-1, 0) > 0)
 	{
+
+			printf("recv success! \n");
 		printf("%s",buf);
 		fflush(stdout);
 		memset(buf, '\0', sizeof(buf));
 	}
 
+
 	printf("\n");
 
 	close(sock);
+
 	return 0;
 }
