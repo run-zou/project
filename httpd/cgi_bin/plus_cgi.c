@@ -56,10 +56,10 @@ int main()
 	if( strcasecmp("GET",method) == 0 ) 
 	{
 			strcpy(query_string, getenv("QUERY_STRING"));
-			
-			//printf("<p>method: %s<br/>",method);
-			//	printf("query_string: %s </p<br/>",query_string);
-			//	printf("");
+
+//			printf("<p>method: %s<br/>",method);
+//			printf("query_string: %s </p<br/>",query_string);
+	
 			if(query_string)
 			{
 				plus(query_string);	
@@ -68,24 +68,29 @@ int main()
 	}
 	else if( strcasecmp("POST", method) == 0)
 	{
-			content_length = atoi(getenv("CONTENT_LENGTH"));
+		//	printf("hello world\n");
 
+			content_length = atoi(getenv("CONTENT_LENGTH"));
+			
+		//	printf("content-length=%d\n",content_length);
+			
 			int i = 0;
 			char c = '\0';
 	
 			for(; i < content_length; ++i)
 			{
-				read(0, post_data[i], 1);
+				read(0, &post_data[i], 1);
 			}
 	
 			post_data[i] = '\0';
 
-			printf("post data: %s</p</br>>",post_data);
+			plus(post_data);
+			
+		//	printf("post data: %s\n",post_data);
 	}
 	else
 	{}
 
-
-	printf("</html>\n");
+//	printf("</html>\n");
 	return 0;
 }

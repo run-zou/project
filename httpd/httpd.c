@@ -262,7 +262,7 @@ void exe_cgi(int sock_client, const char *path, const char *method, const char *
 		else
 		{//父进程从socket里面拿出数据写到cgi_intput里面，让子进程读，然后再从另外一个管道cgi_output里面读出数据给浏览器
 				
-				close(cgi_input[1]);  //close write
+				close(cgi_input[0]);  //close read
 				close(cgi_output[1]);//close write
 
 
@@ -270,11 +270,12 @@ void exe_cgi(int sock_client, const char *path, const char *method, const char *
 				char c='\0';
 				if( strcasecmp("POST",method) == 0 )
 				{//从sock里面拿数据，写到管道里面
-					for(;i<content_length;++i)
-					{
-						recv(sock_client, &c, 1, 0);
-						write(cgi_input[1], &c, 1);
-					}
+
+						for(; i < content_length; ++i)
+						{
+							recv(sock_client, &c, 1, 0);
+							write(cgi_input[1], &c, 1);
+						}
 				}
 
 				while( read(cgi_output[0],&c,1) > 0 )
