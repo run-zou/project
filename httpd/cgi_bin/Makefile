@@ -10,7 +10,7 @@ output:
 	cp debug_cgi ../output/htdocs/cgi_bin
 	cp plus_cgi ../output/htdocs/cgi_bin
 	cp plus.html ../output/htdocs/cgi_bin
-
+	cp student_add.html ../output/htdocs/cgi_bin
 
 .PHONY:clean
 clean:

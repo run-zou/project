@@ -45,7 +45,7 @@ void echo_html(int client, const char *path, unsigned int file_size )
 		strcat(echo_line, " 200 Ok");
 		strcat(echo_line, "\r\n\r\n");
 
-		send(client, echo_line, strlen(echo_line),0);
+		send(client, echo_line, strlen(echo_line), 0);
 			print_debug("send echo head success");
 
 
@@ -87,61 +87,45 @@ int get_line(int sock, char *buf, int max_len)
 		int i = 0;
 		int n = 0;
 		char c = '\0';
+		
 		while( i < (max_len-1) && c != '\n')
 		{
 
-//						print_debug("it is ok");
+			//	print_debug("recv success");
+			n = recv(sock, &c, 1, 0);
 
-				n = recv(sock, &c, 1, 0);
-//						printf("%c\n",c);	
-//						printf("%d\n",n);
-//						print_debug("recv success");
-
-				if( n > 0)
-				{//success,统一不同平台的回车换行符
+			if( n > 0)
+			{//success,统一不同平台的回车换行符
+				if(c == '\r')
+				{
+					n = recv(sock, &c, 1, MSG_PEEK); //嗅探(MSG_PEEK参数-- 只是探测一下并没有读出来)
 					
-
-//							print_debug("come in");
-					if(c == '\r')
-					{
-					
-//								print_debug("c == /r");
-						
-							n = recv(sock, &c, 1, MSG_PEEK); //嗅探(MSG_PEEK参数-- 只是探测一下并没有读出来)
-						if(n > 0 && c == '\n')
-						{//windows
-				
-//									print_debug("c == /n");
-							recv(sock, &c, 1, 0);  //delete
-							
-						}
-						else
-						{//other platform
-					
-//									print_debug("other paltform");
-							c = '\n';
-
-						}
+					if(n > 0 && c == '\n')
+					{//windows
+							//	print_debug("c == /n");
+							recv(sock, &c, 1, 0);  //delete					
 					}
+					else
+					{//other platform
+							c = '\n';
+							//	print_debug("other paltform");
+					}
+				}
 						
-//						print_debug("buf[i++]==c");
-					//将值读到buf中
 					buf[i++] = c;
-				}
-				else
-				{//falied
+					// print_debug("buf[i++]==c");
+					//将值读到buf中
+			}
+			else
+			{//falied
 					c = '\n';
-					
-//						print_debug("failed /n");
-				}
-	
+					//	print_debug("failed /n");
+			}
 		}
 
 		buf[i]= '\0';
 
-
-//print_debug("get line over");
-
+		printf("%s",buf);
 		return i;  //返回字符个数
 }
 
@@ -167,13 +151,14 @@ void exe_cgi(int sock_client, const char *path, const char *method, const char *
 		{//POST
 
 			do{
-					memset(buf, '\0', sizeof(buf));
-					numchars = get_line(sock_client, buf, sizeof(buf));
 					
-					if(strncasecmp(buf, "Content-Length:",strlen("Content-Length:")) == 0 )
-					{
-						content_length = atoi(&buf[16]);  //拿出数据长度
-					}
+				memset(buf, '\0', sizeof(buf));
+				numchars = get_line(sock_client, buf, sizeof(buf));
+					
+				if(strncasecmp(buf, "Content-Length:",strlen("Content-Length:")) == 0 )
+				{
+					content_length = atoi(&buf[16]);  //拿出数据长度
+				}
 
 			  }while(numchars > 0 && strcmp(buf,"\n") != 0);	
 
@@ -245,13 +230,13 @@ void exe_cgi(int sock_client, const char *path, const char *method, const char *
 
 				if( strcasecmp("GET",method) == 0 )
 				{
-						sprintf(query_env, "QUERY_STRING=%s",query_string);
-						putenv(query_env); //导入到环境变量里面
+					sprintf(query_env, "QUERY_STRING=%s",query_string);
+					putenv(query_env); //导入到环境变量里面
 				}
 				else
 				{
-						sprintf(content_len_env, "CONTENT_LENGTH=%d",content_length);
-						putenv(content_len_env);
+					sprintf(content_len_env, "CONTENT_LENGTH=%d",content_length);
+					putenv(content_len_env);
 				}
 
 
@@ -271,11 +256,11 @@ void exe_cgi(int sock_client, const char *path, const char *method, const char *
 				if( strcasecmp("POST",method) == 0 )
 				{//从sock里面拿数据，写到管道里面
 
-						for(; i < content_length; ++i)
-						{
-							recv(sock_client, &c, 1, 0);
-							write(cgi_input[1], &c, 1);
-						}
+					for(; i < content_length; ++i)
+					{
+						recv(sock_client, &c, 1, 0);
+						write(cgi_input[1], &c, 1);
+					}
 				}
 
 				while( read(cgi_output[0],&c,1) > 0 )
@@ -330,7 +315,7 @@ void* accept_request(void *arg)
 		return NULL;
 	}
 
-//print_debug("data exit!");
+	//print_debug("data exit!");
 
 	int i = 0;
 	int j = 0;
@@ -420,7 +405,8 @@ void* accept_request(void *arg)
 			cgi = 1;
 		}
 		else
-		{}
+		{//do nothing
+		}
 
 
 		if(cgi)
@@ -432,15 +418,13 @@ void* accept_request(void *arg)
 		else
 		{
 			clear_header(sock_client);
-			
-//			print_debug("echo_html");
+			//print_debug("echo_html");
 			echo_html( sock_client, path, st.st_size);
 		}
 	}
 
 	close(sock_client);
 
-print_debug("pthread over");
 
 	return NULL;
 }
@@ -466,7 +450,8 @@ int start(short port)
 	local.sin_addr.s_addr = htonl(INADDR_ANY); //自动绑定ip
 
 	socklen_t len =sizeof(local);
-  //bind
+	
+  	//bind
 	if( bind(listen_sock, (struct sockaddr*)&local, len) == -1 )
 	{
 		print_log(__FUNCTION__, __LINE__, errno, strerror(errno)) ;
@@ -474,7 +459,7 @@ int start(short port)
 	}
 	
 
-  //listen
+  	//listen
 	if( listen(listen_sock, _BACK_LOG) == -1 )
 	{
 		print_log(__FUNCTION__, __LINE__, errno, strerror(errno)) ;
@@ -494,15 +479,12 @@ int main(int argc, char* argv[])
 		exit(1);
 	}
 
-
 	short port = atoi(argv[1]);
-
 
 	short sock = start(port);
 
 	struct sockaddr_in client;
 	socklen_t len =0;
-
 
     while(1) 
     {
@@ -521,7 +503,6 @@ int main(int argc, char* argv[])
 		 pthread_create(&new_thread, NULL, accept_request, (void*)new_sock);
 
     }
-	
-   
+	   
    return 0;
 }

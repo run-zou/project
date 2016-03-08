@@ -2,8 +2,9 @@
 #include <string.h>
 #include <stdlib.h>
 
+
 void plus(char *str)
-{
+{//简单加法器
 	if( str == NULL)
 	{	return ; }
 
@@ -33,11 +34,15 @@ void plus(char *str)
 		}
 	}
 
-	int dataA = atoi(data1);
-	int dataB = atoi(data2);
-	printf("%d\n",dataA+dataB);
+	int val1 = atoi(data1);
+	int val2 = atoi(data2);
+
+
+	printf("%d\n",val1+val2);
 
 }
+
+
 
 int main()
 {
@@ -54,21 +59,17 @@ int main()
 
 	strcpy(method, getenv("REQUEST_METHOD"));
 	if( strcasecmp("GET",method) == 0 ) 
-	{
-			strcpy(query_string, getenv("QUERY_STRING"));
-
-//			printf("<p>method: %s<br/>",method);
-//			printf("query_string: %s </p<br/>",query_string);
+	{//GET
+		strcpy(query_string, getenv("QUERY_STRING"));
 	
-			if(query_string)
-			{
-				plus(query_string);	
-			}
+		if(query_string)
+		{
+			plus(query_string);	
+		}
 
 	}
 	else if( strcasecmp("POST", method) == 0)
-	{
-		//	printf("hello world\n");
+	{//POST
 
 			content_length = atoi(getenv("CONTENT_LENGTH"));
 			
@@ -91,6 +92,5 @@ int main()
 	else
 	{}
 
-//	printf("</html>\n");
 	return 0;
 }

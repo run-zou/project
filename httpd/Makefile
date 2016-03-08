@@ -1,5 +1,5 @@
 PWD=$(shell pwd)
-CGI_PATH=$(PWD)/cgi_bin
+CGI_PATH=$(PWD)/cgi_bin ${PWD}/sql_connect
 SER_BIN=httpd
 SER_SRC=httpd.c
 

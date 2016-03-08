@@ -1,45 +1,69 @@
+#include "sql_connect.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
 
-void plus(char *str)
-{//简单加法器
+void student_insert(char *str)
+{
 	if( str == NULL)
 	{	return ; }
 
 	char *begin=str;
-	char *data1=NULL;
-	char *data2=NULL;
 
+	int  flag=0;	
+	char *age=NULL;
+	char *name=NULL;
+	char *school=NULL;
+	char *hobby=NULL;
+
+	//获取学生的四个属性
 	while(*begin != '\0')
 	{
-		if(*begin == '=' && data1==NULL)
-		{
-			data1=begin+1;
-			begin++;
-			if(*begin == '&')
+
+			if(*begin == '=')
 			{
+				switch(flag)
+				{
+					case 0:
+						name = begin + 1;
+						break;
+					case 1:
+						age = begin + 1;
+							break;
+					case 2:
+						school  = begin + 1;
+							break;
+					case 3:
+						hobby = begin + 1;
+							break;
+					default:
+							break;
+
+				}
+				
+				while(*begin != '&' && *begin != '\0')
+				{ ++begin; }
+					
 				*begin = '\0';
+				flag++;
+
+				if(flag <= 3)
+				{ begin++; }
 			}
-		}
-		else if(*begin == '=' && data1 != NULL && data2 == NULL)
-		{
-			data2=begin+1;
+
+			if( *begin != '\0')
 			begin++;
-		}
-		else
-		{
-			begin++;
-		}
 	}
 
-	int val1 = atoi(data1);
-	int val2 = atoi(data2);
+#ifdef _DEBUG
+	printf("name:%s\n",name);
+	printf("age:%s\n",age);
+	printf("hobby:%s\n",hobby);
+	printf("school:%s\n",school);
+#endif
 
-
-	printf("%d\n",val1+val2);
-
+	student_insert_sql(name, age, school, hobby);
 }
 
 
@@ -61,10 +85,12 @@ int main()
 	if( strcasecmp("GET",method) == 0 ) 
 	{//GET
 		strcpy(query_string, getenv("QUERY_STRING"));
-	
+
+	//	printf("%s\n",query_string);
+
 		if(query_string)
 		{
-			plus(query_string);	
+			student_insert(query_string);
 		}
 
 	}
@@ -82,15 +108,13 @@ int main()
 			{
 				read(0, &post_data[i], 1);
 			}
-	
 			post_data[i] = '\0';
 
-			plus(post_data);
-			
-		//	printf("post data: %s\n",post_data);
+			student_insert(post_data);
 	}
 	else
-	{}
+	{//do nothing
+	}
 
 	return 0;
 }

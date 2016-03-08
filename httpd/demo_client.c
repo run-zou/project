@@ -2,12 +2,12 @@
 
 void Usage(const char * proc)
 {
-	printf("Usage:%s [ip][port][cmd]\n");
+	printf("Usage:%s [ip][port]\n");
 }
 
 int main(int argc, char *argv[])
 {
-	if(argc != 4)
+	if(argc != 3)
 	{
 		Usage(argv[0]);
 	}
@@ -36,7 +36,9 @@ int main(int argc, char *argv[])
 
 printf("connect success!\n");
 
-	const char *cmd = argv[3];
+	char cmd[64] = "GET / HTTP/1.0\r\n";
+//	printf("please int your cmd!\n");
+//	gets(cmd);
 
 	int len = strlen(cmd);
 

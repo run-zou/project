@@ -23,9 +23,9 @@ int main()
 	{
 			strcpy(query_string, getenv("QUERY_STRING"));
 			
-			printf("<p>method: %s<br/>",method);
-			printf("query_string: %s </p<br/>",query_string);
-			printf("");
+			printf("<p>method: %s<br/>\n",method);
+			printf("query_string: %s </p<br/>\n",query_string);
+			printf("<p>wa,you are so handsome!</p>");
 
 	}
 	else if( strcasecmp("POST", method) == 0)

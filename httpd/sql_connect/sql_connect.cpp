@@ -22,6 +22,15 @@ sql_connecter::~sql_connecter()
 		free(res);
 	}
 
+#ifdef _DEBUG__
+	char c;
+	cout<<"did you want to delete tables:y?n :";
+	scanf("%c",&c);
+	if( c == 'y' || c == 'Y' )
+	{
+		clear_sql_data();
+	}
+#endif
 }
 
 bool sql_connecter::begin_connect()
@@ -33,7 +42,9 @@ bool sql_connecter::begin_connect()
 	}
 	else
 	{
+	#ifdef _DEBUG__
 		cerr<<"connect success!\n";
+	#endif
 	}
 
 	return true;
@@ -42,7 +53,9 @@ bool sql_connecter::begin_connect()
 bool sql_connecter::close_connect()
 {//断开连结
 		mysql_close(mysql_base);
+	#ifdef _DEBUG__
 		cout<<"connect close...\n";	
+	#endif
 }
 
 bool sql_connecter::insert_sql(const string data)
@@ -56,7 +69,9 @@ cout<<sql<<endl;
 
 	if(	mysql_query(mysql_base, sql.c_str()) == 0)
 	{
+	#ifdef _DEBUG__
 		cout<<"insert success"<<endl;
+	#endif
 		return true;
 	}
 	else
@@ -76,8 +91,9 @@ bool sql_connecter::select_sql()
 
 	if(	mysql_query(mysql_base, sql.c_str()) == 0)
 	{
+	#ifdef _DEBUG__
 		cout<<"query success"<<endl;
-		
+	#endif
 		res=mysql_store_result(mysql_base); //将数据读取到MYSQL_RES中
 		int i=0,j=0;
 		for(; fd = mysql_fetch_field(res); ++i)
@@ -116,28 +132,72 @@ void sql_connecter::show_info()
 	cout<<mysql_get_client_info()<<endl;
 }
 
+void student_insert_sql(char *name, char *age, char *school, char *hobby)
+{
+	const string _host="127.0.0.1";
+	const string _user="Zou";
+	const string _password="";
+	const string _db="test";
+
+#ifdef _DEBUG__
+	const string data = "name,age,school,hobby";
+#endif
+	char buf[64];
+	memset(buf, '\0', sizeof(buf));
+	strcpy(buf,"'");
+	strcat(buf,name);
+	strcat(buf,"','");
+	strcat(buf,age);
+	strcat(buf,"','");
+	strcat(buf,school);
+	strcat(buf,"','");
+	strcat(buf,hobby);
+	strcat(buf,"'");
+
+
+	sql_connecter conn(_host, _user, _password, _db); 
+	conn.begin_connect();
+	conn.insert_sql(buf);
+	conn.select_sql();
+}
+
 
 void sql_connecter::clear_sql_data()
 {
-	const string clear = "delete * form student";
+	//清空表结构，慎用
+	string clear = "delete from student";
+
+#ifdef _DEBUG__
+	printf("clear!\n");
+#endif
+
+	if(	mysql_query(mysql_base, clear.c_str()) == 0)
+	{
+		printf("clear success");
+		select_sql();
+	}
 }
 
 
 
+#ifdef _DEBUG__
+
 int main()
 {
-	const std::string _host="127.0.0.1";
-	const std::string _user="Zou";
-	const std::string _password="";
-	const std::string _db="test";
+	const string _host="127.0.0.1";
+	const string _user="Zou";
+	const string _password="";
+	const string _db="test";
 	
 	//要插入的数据
 	const std::string data = "'tomcat','19','beida','sleep'";
 
 	sql_connecter conn(_host, _user, _password, _db); 
 	conn.begin_connect();
-	conn.insert_sql(data);
+	//conn.insert_sql(data);
 	conn.select_sql();
 
     return 0;
 }
+
+#endif

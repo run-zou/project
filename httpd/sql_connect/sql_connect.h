@@ -34,4 +34,6 @@ private:
 	
 };
 
+void student_insert_sql(char*name, char *age, char *school, char *hobby);
+
 #endif
