@@ -21,9 +21,13 @@ public:
 	bool close_connect();	
 	bool insert_sql(const string data);
 	bool select_sql();
+//	bool update_sql();
+//	bool delete_sql();
+//	bool delete_table();
+//	bool create_table();
 	void show_info();
 	void clear_sql_data();
-
+	void student_insert_sql(char*name, char *age, char *school, char *hobby);
 private:
 	MYSQL_RES  *res;
 	MYSQL  	   *mysql_base;
@@ -34,6 +38,6 @@ private:
 	
 };
 
-void student_insert_sql(char*name, char *age, char *school, char *hobby);
+//void student_insert_sql(char*name, char *age, char *school, char *hobby);
 
 #endif

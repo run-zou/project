@@ -23,13 +23,13 @@ sql_connecter::~sql_connecter()
 	}
 
 #ifdef _DEBUG__
-	char c;
-	cout<<"did you want to delete tables:y?n :";
-	scanf("%c",&c);
-	if( c == 'y' || c == 'Y' )
-	{
-		clear_sql_data();
-	}
+//	char c;
+//	cout<<"did you want to delete tables:y?n :";
+//	scanf("%c",&c);
+//	if( c == 'y' || c == 'Y' )
+//	{
+//		clear_sql_data();
+//	}
 #endif
 }
 
@@ -65,13 +65,13 @@ bool sql_connecter::insert_sql(const string data)
 	sql += data;
 	sql +=	")";
 
-cout<<sql<<endl;
+	//cout<<sql<<endl;
 
 	if(	mysql_query(mysql_base, sql.c_str()) == 0)
 	{
-	#ifdef _DEBUG__
+	//#ifdef _DEBUG__
 		cout<<"insert success"<<endl;
-	#endif
+	//#endif
 		return true;
 	}
 	else
@@ -96,28 +96,35 @@ bool sql_connecter::select_sql()
 	#endif
 		res=mysql_store_result(mysql_base); //将数据读取到MYSQL_RES中
 		int i=0,j=0;
+
 		for(; fd = mysql_fetch_field(res); ++i)
 		{
 			bzero(buf[i], sizeof(buf[i]));
 			strcpy(buf[i],fd->name);
 		}
-		j=mysql_num_fields(res);
+	
+	  //制成表格
+	  printf("<table border=\"1\">\n");	
+	  printf("<tr>\n");	
+		j=mysql_num_fields(res); //列
 		for(i=0; i<j; ++i)
 		{
-			printf("%s\t",buf[i]);
+			printf("<th>%s </th>\t",buf[i]);
 		}
-		printf("\n");
+	  printf("</tr>\n");	
 		
 		while( row=mysql_fetch_row(res) )
 		{
+			printf("<tr>\n");	
 				for(i=0; i<j; ++i)
-				{
-					printf("%s\t",row[i]);
+				{//输出一行的所有列
+					printf("<td>%s </td>\t",row[i]);
 				}
-				printf("\n");
+			printf("</tr>\n");	
 		}
-
-		return true;
+		printf("</table>\n");
+	
+	return true;
 	}
 	else
 	{
@@ -132,12 +139,8 @@ void sql_connecter::show_info()
 	cout<<mysql_get_client_info()<<endl;
 }
 
-void student_insert_sql(char *name, char *age, char *school, char *hobby)
+void sql_connecter::student_insert_sql(char *name, char *age, char *school, char *hobby)
 {
-	const string _host="127.0.0.1";
-	const string _user="Zou";
-	const string _password="";
-	const string _db="test";
 
 #ifdef _DEBUG__
 	const string data = "name,age,school,hobby";
@@ -155,10 +158,8 @@ void student_insert_sql(char *name, char *age, char *school, char *hobby)
 	strcat(buf,"'");
 
 
-	sql_connecter conn(_host, _user, _password, _db); 
-	conn.begin_connect();
-	conn.insert_sql(buf);
-	conn.select_sql();
+	insert_sql(buf);
+//	select_sql();
 }
 
 

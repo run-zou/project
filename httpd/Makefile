@@ -3,8 +3,8 @@ CGI_PATH=$(PWD)/cgi_bin ${PWD}/sql_connect
 SER_BIN=httpd
 SER_SRC=httpd.c
 
-CLI_BIN=demo_client
-CLI_SRC=demo_client.c
+CLI_BIN=client
+CLI_SRC=client.c
 INCLUDE=.
 CC=gcc
 FLAGS=-o
@@ -38,7 +38,7 @@ output:all
 	mkdir  output
 	mkdir -p output/htdocs/cgi_bin
 	cp httpd output
-	cp demo_client output
+	cp client output
 	cp -rf conf output
 	cp -rf log output
 	cp start.sh output

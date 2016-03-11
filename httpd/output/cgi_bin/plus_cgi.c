@@ -61,12 +61,15 @@ int main()
 	if( strcasecmp("GET",method) == 0 ) 
 	{//GET
 		strcpy(query_string, getenv("QUERY_STRING"));
-	
 		if(query_string)
 		{
-			plus(query_string);	
+			printf("<HTML><br/>\n");
+			printf("<h2>sum:</h2>");
+			printf("<p>");
+			plus(query_string);
+			printf("</p>\n");	
+			printf("</HTML>\n");
 		}
-
 	}
 	else if( strcasecmp("POST", method) == 0)
 	{//POST

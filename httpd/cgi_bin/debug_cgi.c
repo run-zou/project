@@ -23,10 +23,9 @@ int main()
 	{
 			strcpy(query_string, getenv("QUERY_STRING"));
 			
-			printf("<p>method: %s<br/>\n",method);
-			printf("query_string: %s </p<br/>\n",query_string);
-			printf("<p>wa,you are so handsome!</p>");
-
+			printf("<p>method:%s</p><br/>\n",method);
+			printf("<p>query_string:%s </p><br/>\n",query_string);
+			printf("<p>you are so handsome!</p>");
 	}
 	else if( strcasecmp("POST", method) == 0)
 	{
@@ -37,12 +36,12 @@ int main()
 	
 			for(; i < content_length; ++i)
 			{
-				read(0, post_data[i], 1);
+				read(0, &post_data[i], 1);
 			}
 	
 			post_data[i] = '\0';
 
-			printf("post data: %s</p</br>>",post_data);
+			printf("<p>post data: %s</p><br/>\n",post_data);
 	}
 	else
 	{}
