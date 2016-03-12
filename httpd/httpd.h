@@ -14,9 +14,12 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <sys/epoll.h>
 
 #define _BACK_LOG 5
 #define _COMM_SIZE_ 1024
 #define MAIN_PAGE "index.html"
 #define HTTP_VERSION "HTTP/1.0"
+#define MAX_EVENT_NUM 1024  //最大就绪数目
+
 #endif

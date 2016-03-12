@@ -2,25 +2,20 @@ PWD=$(shell pwd)
 CGI_PATH=$(PWD)/cgi_bin ${PWD}/sql_connect
 SER_BIN=httpd
 SER_SRC=httpd.c
-
 CLI_BIN=client
 CLI_SRC=client.c
 INCLUDE=.
 CC=gcc
 FLAGS=-o
 LDFLAGS=-lpthread#-static
-
+USE=USE_EPOLL #使用epoll版本或者多线程版本
 
 .PHONY:all
 all:$(SER_BIN) $(CLI_BIN) cgi
-
 $(SER_BIN):$(SER_SRC)
-	$(CC) $(FLAGS) $@ $^ $(LDFLAGS) #-D_DEBUG_ -g
-
+	$(CC) $(FLAGS) $@ $^ $(LDFLAGS) -D${USE} #-D_DEBUG_ -g
 $(CLI_BIN):$(CLI_SRC)
 	$(CC) $(FLAGS) $@ $^ $(LDFLAGS) #-D_DEBUG_
-
-
 
 .PHONY:cgi
 cgi:
@@ -30,8 +25,6 @@ cgi:
 			make;\
 			cd -;\
 			done
-
-
 
 .PHONY:output
 output:all
@@ -51,8 +44,6 @@ output:all
 			cd -;\
 			done
 
-
-
 PHONY:clean
 clean:
 	rm -rf $(SER_BIN) $(CLI_BIN) output
@@ -62,4 +53,3 @@ clean:
 			make clean;\
 			cd -;\
 			done
-
