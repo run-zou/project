@@ -17,15 +17,132 @@ void print_debug(const char * str)
 #endif
 }
 
-void echo_error_to_client()
+static void Bad_request(client)
 {
-
-	return ;
+	print_debug("enter our fault...\n");
+	char buf[1024];
+	sprintf(buf, "HTTP/1.0 400 BAD REQUEST\r\n");
+	send(client, buf, strlen(buf), 0);
+	sprintf(buf, "Content-type: text/html\r\n");
+	send(client, buf, strlen(buf), 0);
+	sprintf(buf, "\r\n");
+	send(client, buf, strlen(buf), 0);
+	sprintf(buf, "<html></br><p>your enter message is a bad request</p></br></html>\r\n");
+	send(client, buf, strlen(buf), 0);
+}
+static void Unauthorized(client)
+{}
+static void Not_found(client)
+{
+	char buf[1024];
+	sprintf(buf, "HTTP/1.0 404 NOT_FOUND\r\n");
+	send(client, buf, strlen(buf), 0);
+	sprintf(buf, "Content-type: text/html\r\n");
+	send(client, buf, strlen(buf), 0);
+	sprintf(buf, "\r\n");
+	send(client, buf, strlen(buf), 0);
+	sprintf(buf, "<html></br><p>source is not found </p></br></html>\r\n");
+	send(client, buf, strlen(buf), 0);
+}
+static void Forbidden(client)
+{
+	char buf[1024];
+	sprintf(buf, "HTTP/1.0 403 Forbidden\r\n");
+	send(client, buf, strlen(buf), 0);
+	sprintf(buf, "Content-type: text/html\r\n");
+	send(client, buf, strlen(buf), 0);
+	sprintf(buf, "\r\n");
+	send(client, buf, strlen(buf), 0);
+	sprintf(buf, "<html></br><p>server Forbidden </p></br></html>\r\n");
+	send(client, buf, strlen(buf), 0);
+}
+static void Server_error(client)
+{
+	char buf[1024];
+	sprintf(buf, "HTTP/1.0 500 Server error\r\n");
+	send(client, buf, strlen(buf), 0);
+	sprintf(buf, "Content-type: text/html\r\n");
+	send(client, buf, strlen(buf), 0);
+	sprintf(buf, "\r\n");
+	send(client, buf, strlen(buf), 0);
+	sprintf(buf, "<html></br><p>server server error </p></br></html>\r\n");
+	send(client, buf, strlen(buf), 0);
+}
+static void Unavailable(client)
+{
+	char buf[1024];
+	sprintf(buf, "HTTP/1.0 503 Unavailable\r\n");
+	send(client, buf, strlen(buf), 0);
+	sprintf(buf, "Content-type: text/html\r\n");
+	send(client, buf, strlen(buf), 0);
+	sprintf(buf, "\r\n");
+	send(client, buf, strlen(buf), 0);
+	sprintf(buf, "<html></br><p>server unavailable </p></br></html>\r\n");
+	send(client, buf, strlen(buf), 0);
+}
+	
+void echo_error_to_client(int client, int error_status)
+{
+	switch(error_status)
+	{
+		case 200: //ok 客户端请求成功
+				break;
+		case 400: //Bad Request  客户端请求有语法错误，不能被服务器所理解
+			Bad_request(client);
+				break;
+		case 401: //Unauthorized 请求未经授权
+			Unauthorized(client);
+				break;
+		case 403: // Forbidden  服务器收到请求，但是拒绝提供服务
+			Forbidden(client);
+				break;
+		case 404: // Not Found  请求资源不存在，eg：输入了错误的URL
+			Not_found(client);
+				break;
+		case 405: //用户在Request-Line字段定义的方法不允许
+				break;
+		case 406: //根据用户发送的Accept拖，请求资源不可访问
+				break;
+		case 407: //类似401，用户必须首先在代理服务器上得到授权
+				break;
+		case 408: //客户端没有在用户指定的饿时间内完成请求
+				break;
+		case 409: //对当前资源状态，请求不能完成
+				break;
+		case 410: //服务器上不再有此资源且无进一步的参考地址
+				break;
+		case 411: //服务器拒绝用户定义的Content-Length属性请求
+				break;
+		case 412: //一个或多个请求头字段在当前请求中错误
+				break;
+		case 413: //请求的资源大于服务器允许的大小
+				break;
+		case 414: //请求的资源URL长于服务器允许的长度
+				break;
+		case 415: //请求资源不支持请求项目格式
+				break;
+		case 416: //请求中包含Range请求头字段，在当前请求资源范围内没有range指示值，请求也不包含If-Range请求头字段
+				break;
+		case 417: //服务器不满足请求Expect头字段指定的期望值，如果是代理服务器，可能是下一级服务器不能满足请求长。
+				break;
+		case 500: // Internal Server Error 服务器发生不可预期的错误
+			Server_error(client);
+				break;
+		case 501: // Error 未实现
+				break;
+		case 502: // HTTP 网关错误
+				break;
+		case 503: // Server Unavailable 服务器当前不能处理客户端的请求，一段时间后可能恢复正常
+			Unavailable(client);
+				break;
+		default:
+				break;
+	}
 }
 
+//访问html
 void echo_html(int client, const char *path, unsigned int file_size )
 {
-		
 		if(path == NULL)
 		{ return;}
 		//以只读方式打开url指定的资源 
@@ -37,6 +154,7 @@ void echo_html(int client, const char *path, unsigned int file_size )
 			return ;
 		}
 		print_debug("open index.html success");
+		//给浏览器发送响应报文,这样浏览器就可以解释浏览器页面
 		char echo_line[1024];
 		memset(echo_line,'\0',sizeof(echo_line));
 		strncpy(echo_line, HTTP_VERSION, strlen(HTTP_VERSION)+1);
@@ -44,8 +162,7 @@ void echo_html(int client, const char *path, unsigned int file_size )
 		strcat(echo_line, "\r\n\r\n");
 		send(client, echo_line, strlen(echo_line), 0);
 		print_debug("send echo head success");
-
-		//sendfile函数比write，send高效，减少了拷贝的次数（避免了从内核取到用户态的复杂拷贝过程）	
+		//sendfile函数比write，send高效，减少了拷贝的次数（避免了从内核取到用户态的复杂拷贝过程) 注意第二个参数
 		if ( sendfile(client, in_fd, NULL, file_size) < 0 )	
 		{//将资源发送给客户端
 			print_debug("send_file failed");
@@ -54,12 +171,11 @@ void echo_html(int client, const char *path, unsigned int file_size )
 			return;
 		}
 		print_debug("sendfile success");
-
 		close(in_fd);
 }
 
 void clear_header(int client)
-{
+{ //清除一行消息
 		char buf[1024];
 		memset(buf, '\0', sizeof(buf));
 		int ret = 0;	
@@ -70,9 +186,8 @@ void clear_header(int client)
 		}while(ret>0 && strcmp(buf,"\n") != 0);
 }
 
-//获取一行信息
 int get_line(int sock, char *buf, int max_len)
-{
+{//获取一行信息
 	if( !buf || max_len <=0 )
 	{ 
 		return 0; 
@@ -113,7 +228,7 @@ int get_line(int sock, char *buf, int max_len)
 	return i;  //返回字符个数
 }
 
-
+//执行cgi
 void exe_cgi(int sock_client, const char *path, const char *method, const char *query_string)
 {//cgi
 	char buf[_COMM_SIZE_];
@@ -145,11 +260,11 @@ void exe_cgi(int sock_client, const char *path, const char *method, const char *
 			
 		if( content_length == -1)
 		{//content-length字段出错
-			echo_error_to_client();
+			echo_error_to_client(sock_client, 500);
 			return ;			
 		}	
 	}
-		
+	//给浏览器发送响应报文	
 	memset(buf, '\0', sizeof(buf));
 	strcpy(buf,HTTP_VERSION);
 	strcat(buf," 200 OK\r\n\r\n");
@@ -160,16 +275,15 @@ void exe_cgi(int sock_client, const char *path, const char *method, const char *
 	{//failed
 		close(cgi_input[0]);
 		close(cgi_input[1]);
-		echo_error_to_client();
+		echo_error_to_client(sock_client,500);
 		return ;
 	}
-
 	//创建output管道
 	if( pipe(cgi_output) < 0 )
 	{
 		close(cgi_output[0]);	
 		close(cgi_output[1]);	
-		echo_error_to_client();
+		echo_error_to_client(sock_client,500);
 		return ;
 	}
 
@@ -183,7 +297,7 @@ void exe_cgi(int sock_client, const char *path, const char *method, const char *
 		close(cgi_input[1]);		
 		close(cgi_output[0]);	
 		close(cgi_output[1]);	
-		echo_error_to_client();
+		echo_error_to_client(sock_client,500);
 	}
 	else if( id == 0)
 	{//子进程
@@ -197,11 +311,9 @@ void exe_cgi(int sock_client, const char *path, const char *method, const char *
 
 		close(cgi_input[1]);  //关闭写端--》标准输入
 		close(cgi_output[0]); //关闭读端--》标准输出
-				
 		//重定向
 		dup2(cgi_input[0], 0); 
 		dup2(cgi_output[1], 1);
-				
 		//将需要重用的参数传到环境变量里面,因为程序替换时环境变量没有被替换
 		sprintf(method_env, "REQUEST_METHOD=%s",method);
 		putenv(method_env); //将‘方法’导入到环境变量里面
@@ -247,7 +359,6 @@ void exe_cgi(int sock_client, const char *path, const char *method, const char *
 	}
 }
 
-
 void* accept_request(void *arg)
 {
 	pthread_detach(pthread_self()); //线程分离
@@ -272,7 +383,7 @@ void* accept_request(void *arg)
 #endif
 	if( get_line(sock_client, buffer, sizeof(buffer)) < 0 )
 	{
-		echo_error_to_client();
+		echo_error_to_client(sock_client,500);
 		return NULL;
 	}
 	//http请求的状态行被读取到buf数组里面，接下来可以从中取出‘方法’，‘url’,以及‘参数(query)'
@@ -289,7 +400,7 @@ void* accept_request(void *arg)
 	//检查提取的方法是否合理
 	if( strcasecmp(method,"GET") && strcasecmp(method,"POST") )
 	{
-		echo_error_to_client();
+		echo_error_to_client(sock_client, 500);
 		return NULL;
 	}
 	//清除多余空格
@@ -337,7 +448,7 @@ void* accept_request(void *arg)
 	{//失败，不存在(需要清除资源)
 		 print_debug("stat faild");
 		 clear_header(sock_client);
-		 echo_error_to_client();
+		 echo_error_to_client(sock_client,403);
 	}
 	else
 	{//存在
@@ -453,7 +564,7 @@ int main(int argc, char* argv[])
 	struct epoll_event ready_event[MAX_EVENT_NUM];
 	struct epoll_event _event;
 	_event.events = EPOLLIN;
-	_event.data.fd =  sock;
+	_event.data.fd = sock;
 	int epollfd = epoll_create(MAX_EVENT_NUM);
 	//添加sock上的注册事件
 	if(epoll_ctl(epollfd, EPOLL_CTL_ADD, sock, &_event) < 0)
@@ -466,10 +577,11 @@ int main(int argc, char* argv[])
     while(1) 
     {
 		//int timeout =8000; //-1时表示永不超时
-		int ready_num = epoll_wait(epollfd, ready_event, MAX_EVENT_NUM, -1); //永不超时
+		//等待注册事件的就绪
+		int ready_num = epoll_wait(epollfd, ready_event, MAX_EVENT_NUM, -1); //永不超时（阻塞式等待）
 		if(ready_num == 0)
 		{
-			printf("timeout!\n");
+			print_debug("timeout!\n");
 			break;
 		}
 		else if(ready_num == -1)
@@ -477,8 +589,8 @@ int main(int argc, char* argv[])
 			perror("epoll_wait");
 			break;
 		}
-		//printf("wait_success,reay_num is:%d\n",ready_num);
-		int i=0;
+	
+		int i=0;	
 		for(; i<ready_num;++i)
 		{
 			int fd = ready_event[i].data.fd;
@@ -492,8 +604,9 @@ int main(int argc, char* argv[])
 					perror("accept");
 					continue;
 				}
-				//printf("accept success\n");
-				setnoblock(new_sock);//设置为非阻塞式
+				print_debug("accept success\n");
+	
+				setnoblock(new_sock);//设置为非阻塞式，因为event使用了ET模式
 				_event.events = EPOLLIN | EPOLLOUT | EPOLLET;
 				_event.data.fd = new_sock;
 				if(epoll_ctl(epollfd, EPOLL_CTL_ADD, new_sock, &_event) < 0)
@@ -502,7 +615,8 @@ int main(int argc, char* argv[])
 					close(new_sock);
 					continue;
 				}
-				printf("re_epoll_ctl  success\n");
+	
+				print_debug("re_epoll_ctl  success\n");
 			}
 			else if( (ready_event[i].events & EPOLLIN) && (ready_event[i].events & EPOLLOUT))
 			{
@@ -510,7 +624,7 @@ int main(int argc, char* argv[])
 				pthread_t new_thread;
 				if(pthread_create(&new_thread, NULL, accept_request, (void*)ready_event[i].data.fd) == 0)
 				{
-					printf("pthread success\n");
+					print_debug("pthread success\n");
 				}
 				//删除fd上的注册事件	
 				epoll_ctl(epollfd, EPOLL_CTL_DEL, fd, NULL);	
@@ -518,6 +632,7 @@ int main(int argc, char* argv[])
 		}
     }
 #endif
+
    return 0;
 }
 

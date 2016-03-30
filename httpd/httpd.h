@@ -16,10 +16,10 @@
 #include <fcntl.h>
 #include <sys/epoll.h>
 
-#define _BACK_LOG 5
-#define _COMM_SIZE_ 1024
-#define MAIN_PAGE "index.html"
-#define HTTP_VERSION "HTTP/1.0"
-#define MAX_EVENT_NUM 1024  //最大就绪数目
+#define _BACK_LOG 5                //最大TCP链接数目
+#define _COMM_SIZE_ 1024           //
+#define MAIN_PAGE "index.html"     //主页
+#define HTTP_VERSION "HTTP/1.0"    //协议版本
+#define MAX_EVENT_NUM 1024         //最大就绪数目
 
-#endif
+#endif //_HTTPD_H_

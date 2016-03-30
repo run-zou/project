@@ -1,3 +1,4 @@
+//此文件只是为了测试一下服务器的连结情况，具体功能是通过浏览器来实现的
 #include "client.h"
 
 void Usage(const char * proc)

@@ -13,31 +13,31 @@ USE=USE_EPOLL #使用epoll版本或者多线程版本
 .PHONY:all
 all:$(SER_BIN) $(CLI_BIN) cgi
 $(SER_BIN):$(SER_SRC)
-	$(CC) $(FLAGS) $@ $^ $(LDFLAGS) -D${USE} #-D_DEBUG_ -g
+	@$(CC) $(FLAGS) $@ $^ $(LDFLAGS) -D${USE} #-D_DEBUG_ -g
 $(CLI_BIN):$(CLI_SRC)
-	$(CC) $(FLAGS) $@ $^ $(LDFLAGS) #-D_DEBUG_
+	@$(CC) $(FLAGS) $@ $^ $(LDFLAGS) #-D_DEBUG_
 
 .PHONY:cgi
 cgi:
-	for name in `echo $(CGI_PATH)`;\
-			do\
-			cd $$name;\
-			make;\
-			cd -;\
-			done
+	@for name in `echo $(CGI_PATH)`;\
+		do\
+		cd $$name;\
+		make;\
+		cd -;\
+		done
 
 .PHONY:output
 output:all
-	mkdir  output
-	mkdir -p output/htdocs/cgi_bin
-	cp httpd output
-	cp client output
-	cp -rf conf output
-	cp -rf log output
-	cp start.sh output
-	cp -rf cgi_bin output
-	cp -rf htdocs/* output/htdocs
-	for name in `echo $(CGI_PATH)`;\
+	@mkdir  output
+	@mkdir -p output/htdocs/cgi_bin
+	@cp httpd output
+	@cp client output
+	@cp -rf conf output
+	@cp -rf log output
+	@cp start.sh output
+	@cp -rf cgi_bin output
+	@cp -rf htdocs/* output/htdocs
+	@for name in `echo $(CGI_PATH)`;\
 			do\
 			cd $$name;\
 			make output;\
@@ -47,7 +47,7 @@ output:all
 PHONY:clean
 clean:
 	rm -rf $(SER_BIN) $(CLI_BIN) output
-	for name in `echo $(CGI_PATH)`;\
+	@for name in `echo $(CGI_PATH)`;\
 			do\
 			cd $$name;\
 			make clean;\

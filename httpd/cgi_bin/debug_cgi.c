@@ -1,3 +1,4 @@
+//当时写此文件视为了检测一下浏览器是否能分辨出GET和POST请求
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>

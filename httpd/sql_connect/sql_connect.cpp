@@ -55,27 +55,89 @@ bool sql_connecter::close_connect()
 	#endif
 }
 
-bool sql_connecter::insert_sql(const string data)
+//1.增
+bool sql_connecter::insert_sql(char *name, char *age, char *school, char *hobby)
 {//向mysql中insert into数据
 	string sql = "INSERT INTO student (name,age,school,hobby) VALUES";
-	sql += "(";
-	sql += data;
-	sql +=	")";
-	//cout<<sql<<endl;
+	sql+="('";
+	sql+=name;
+	sql+="',";
+	sql+=age;
+	sql+=",'";
+	sql+=school;
+	sql+="','";
+	sql+=hobby;
+	sql+="')";
+#ifdef _DEBUG__
+	cout<<sql<<endl;
+#endif
 	if(	mysql_query(mysql_base, sql.c_str()) == 0)
 	{
-	//#ifdef _DEBUG__
-		cout<<"insert success"<<endl;
-	//#endif
-		return true;
+		cout<<"<p> insert success </p>"<<endl;
 	}
 	else
 	{
-		cerr<<"insert failed"<<endl;
+		cerr<<"<p> insert failed </p>"<<endl;
 		return false;
 	}
+	cout<<"<a href=\"../index.html\">return home </a><br/>"<<endl; //超链接
+	return true;
 }
+//2.删
+bool sql_connecter::delete_sql(const string type,const string val)//age,10...
+{
+	//delete from student where (name=x,age=x,school=x,hobby=x)
+	string sql = "delete from student where(";
+	sql+=type;
+	sql+="='";
+	sql+=val;
+	sql+="')";
 
+	cout<<"<p>"<<sql<<"</p>"<<endl;
+	
+	if(mysql_query(mysql_base, sql.c_str()) == 0)
+	{
+	#ifdef _DEBUG__
+		cout<<"<p> delete success </p>"<<endl;
+	#endif
+	}
+	else
+	{
+		cerr<<"<p> delete failed </p>"<<endl;
+		return false;
+	}
+	cout<<"<a href=\"../index.html\">return home </a><br/>"<<endl; //超链接
+	return true;
+}
+//3.改
+bool sql_connecter::update_sql(const string _type,const string new_val, const string type, const string val)
+{//update stduent set age=x where(age=x,...)
+	string sql = "update student set ";
+	sql+=_type;
+	sql+="='";
+	sql+=new_val;
+	sql+="' ";
+	sql+="where(";
+	sql+=type;
+	sql+="='";
+	sql+=val;
+	sql+="')";
+	cout<<"<p>"<<sql<<"</p>"<<endl;
+	if(mysql_query(mysql_base, sql.c_str()) == 0)
+	{
+	#ifdef _DEBUG__
+		cout<<"<p> update success </p>"<<endl;
+	#endif
+	}
+	else
+	{
+		cerr<<"<p> update failed </p>"<<endl;
+		return false;
+	}
+	cout<<"<a href=\"../index.html\">return home </a><br/>"<<endl; //超链接
+	return true;
+}
+//4.查
 bool sql_connecter::select_sql()
 {
 	string sql = "select * from student";
@@ -85,7 +147,7 @@ bool sql_connecter::select_sql()
 	if(	mysql_query(mysql_base, sql.c_str()) == 0)
 	{
 	#ifdef _DEBUG__
-		cout<<"query success"<<endl;
+		cout<<"<p> query success </p>"<<endl;
 	#endif
 		res=mysql_store_result(mysql_base); //将数据读取到MYSQL_RES中
 		int i=0,j=0;
@@ -99,7 +161,7 @@ bool sql_connecter::select_sql()
 	    printf("<tr>\n");	
 	    j=mysql_num_fields(res); //列
 	    for(i=0; i<j; ++i)
-		{
+		{//输出第一行的每一列信息
 			printf("<th>%s </th>\t",buf[i]);
 		}
 	    printf("</tr>\n");	
@@ -108,45 +170,25 @@ bool sql_connecter::select_sql()
 		{
 			printf("<tr>\n");	
 			for(i=0; i<j; ++i)
-			{//输出一行的所有列
+			{//一次输出每一行的所有列
 				printf("<td>%s </td>\t",row[i]);
 			}
 			printf("</tr>\n");	
 		}
 		printf("</table>\n");
+		cout<<"<a href=\"../index.html\">return home </a><br/>"<<endl; //超链接
 		return true;
 	}
 	else
 	{
-		cerr<<"query failed"<<endl;
+		cerr<<"<p> query failed </p>"<<endl;
 	}
-	
 	return false;
 }
 
 void sql_connecter::show_info()
 {
 	cout<<mysql_get_client_info()<<endl;
-}
-
-void sql_connecter::student_insert_sql(char *name, char *age, char *school, char *hobby)
-{
-#ifdef _DEBUG__
-	const string data = "name,age,school,hobby";
-#endif
-	char buf[64];
-	memset(buf, '\0', sizeof(buf));
-	strcpy(buf,"'");
-	strcat(buf,name);
-	strcat(buf,"','");
-	strcat(buf,age);
-	strcat(buf,"','");
-	strcat(buf,school);
-	strcat(buf,"','");
-	strcat(buf,hobby);
-	strcat(buf,"'");
-	insert_sql(buf);
-	//select_sql();
 }
 
 void sql_connecter::clear_sql_data()
@@ -171,10 +213,13 @@ int main()
 	const string _password="";
 	const string _db="test";
 	//要插入的数据
-	const std::string data = "'tomcat','19','beida','sleep'";
 	sql_connecter conn(_host, _user, _password, _db); 
 	conn.begin_connect();
-	//conn.insert_sql(data);
+	conn.insert_sql("tomcat","19","beida","sleep");
+	conn.select_sql();
+	conn.update_sql("name","mack","age","3");
+	conn.select_sql();
+	conn.delete_sql("name","mac");
 	conn.select_sql();
     return 0;
 }
