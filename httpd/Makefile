@@ -4,21 +4,17 @@ SER_BIN=httpd
 SER_SRC=httpd.c
 CLI_BIN=client
 CLI_SRC=client.c
-INCLUDE=. #-I /usr/libevent/include
-#LIB=-L /usr/libevent/lib/ 
+INCLUDE=. -I /usr/libevent/include
+LIB=-L /usr/libevent/lib/ 
 CC=gcc
 FLAGS=-o
-LDFLAGS=-lpthread #-levent #-static
-USE=USE_LIBEVENT #USE_EPOLL #UES_THREAD               #使用libevent版本，epoll版本或者多线程版本
-
-MYINCLUDE=-I /usr/libevent/include
-LIB=-L /usr/libevent/lib/ 
-MYFLAG=-levent
+LDFLAGS=-lpthread -levent #-static
+USE=USE_LIBEVENT #USE_EPOLL #UES_THREAD        #使用libevent版本，epoll版本或者多线程版本
 
 .PHONY:all
 all:$(SER_BIN) $(CLI_BIN) cgi
 $(SER_BIN):$(SER_SRC)
-	@$(CC) $(FLAGS) $@ $^ $(MYINCLUDE) $(MYLIB) $(MYFLAG) $(LDFLAGS) -D${USE} -g  #-D_DEBUG_ -g
+	@$(CC) $(FLAGS) $@ $^ $(MYINCLUDE) $(MYLIB) $(MYFLAG) $(LDFLAGS) -D${USE}   #-D_DEBUG_ -g
 $(CLI_BIN):$(CLI_SRC)
 	@$(CC) $(FLAGS) $@ $^ $(LDFLAGS) #-D_DEBUG_
 
