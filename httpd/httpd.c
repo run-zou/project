@@ -684,8 +684,10 @@ int main(int argc, char* argv[])
 #ifdef USE_LIBEVENT
 	base = event_base_new();
 	struct event evlisten;
+	//设置事件
 	event_set(&evlisten, sock, EV_READ | EV_PERSIST, oneAccept, NULL);
 	event_base_set(base, &evlisten);
+	//添加事件
 	event_add(&evlisten,NULL);
 	event_base_dispatch(base);
 #endif
