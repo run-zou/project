@@ -1,5 +1,18 @@
 #include "httpd.h"
 
+#include <event.h>
+struct event_base *base;
+
+#ifdef USE_LIBEVENT
+struct arg
+{ //使用libevent的时候需要malloc一块空间，使用该结构体是为了方便释放，因为我将线程设置为分离的，而开辟的空间在线程结束后释放
+	int fd;
+	struct event* myevent;
+};
+//定义一个全局变量
+struct arg myarg;
+#endif
+
 void Usage(const char* proc)
 {
 	printf("%s [ip] [port]\n",proc);
@@ -363,7 +376,11 @@ void* accept_request(void *arg)
 {
 	pthread_detach(pthread_self()); //线程分离
 	int cgi = 0; //cgi
+#ifdef USE_LIBEVENT
+	int sock_client = (*(struct arg*)arg).fd;
+#else
 	int sock_client = (int)arg; //sock
+#endif
 	char * query_string = NULL; //用于提取参数
 	char method[_COMM_SIZE_ / 10]; //用于提取方法
 	memset(method, '\0', sizeof(method));
@@ -482,6 +499,11 @@ void* accept_request(void *arg)
 	}
 	//结束后需要关闭套接字
 	close(sock_client);
+#ifdef USE_LIBEVENT
+	struct event* myev = (*(struct arg*)arg).myevent;
+	free(myev);
+	myev = NULL;
+#endif
 	return NULL;
 }
 
@@ -527,6 +549,32 @@ void setnoblock(int newsock)
 		exit(1);
 	}
 	fcntl(newsock, F_SETFL, old | O_NONBLOCK); //置为非阻塞的
+}
+
+
+void create_ptherad(int newfd, short event, void *arg)
+{//libevent
+	pthread_t pid;
+	//struct arg myarg;
+	myarg.fd = newfd;
+	myarg.myevent = (struct event*)arg;
+	pthread_create(&pid, NULL, accept_request, (void*)&myarg);
+}
+
+void oneAccept(int sock, short ievent, void *arg)
+{//libevent
+	int clientfd;
+	struct sockaddr_in client;
+	socklen_t len = sizeof(client);
+	clientfd = accept(sock, (struct sockaddr*)&client, &len);
+	if(clientfd < 0)
+	{
+		perror("accept");
+	}
+	struct event *request = (struct event *)malloc(sizeof(struct event));
+	event_set(request, clientfd, EV_READ| EV_WRITE , create_ptherad, request);   //  EV_PERSIST
+	event_base_set(base, request);
+	event_add(request,NULL);
 }
 
 
@@ -631,6 +679,15 @@ int main(int argc, char* argv[])
 			}
 		}
     }
+#endif
+
+#ifdef USE_LIBEVENT
+	base = event_base_new();
+	struct event evlisten;
+	event_set(&evlisten, sock, EV_READ | EV_PERSIST, oneAccept, NULL);
+	event_base_set(base, &evlisten);
+	event_add(&evlisten,NULL);
+	event_base_dispatch(base);
 #endif
 
    return 0;
