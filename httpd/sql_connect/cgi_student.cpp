@@ -1,6 +1,7 @@
 //此文件用于实现学生信息的注册，查找，删除和更新
 #include "sql_connect.h"
 #include <stdio.h>
+#include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
 

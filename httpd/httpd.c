@@ -1,5 +1,7 @@
 #include "httpd.h"
 
+#include "pthread_pool.h"  //线程池
+
 #include <event.h>
 struct event_base *base;
 
@@ -195,7 +197,6 @@ void clear_header(int client)
 		do
 		{
 			ret = get_line(client,buf,sizeof(buf));
-
 		}while(ret>0 && strcmp(buf,"\n") != 0);
 }
 
@@ -255,7 +256,7 @@ void exe_cgi(int sock_client, const char *path, const char *method, const char *
 
 	if( strcasecmp(method,"GET") == 0 )	
 	{//GET方法
-		clear_header(sock_client);
+		clear_header(sock_client);     //???
 	}
 	else
 	{//POST方法
@@ -277,6 +278,7 @@ void exe_cgi(int sock_client, const char *path, const char *method, const char *
 			return ;			
 		}	
 	}
+
 	//给浏览器发送响应报文	
 	memset(buf, '\0', sizeof(buf));
 	strcpy(buf,HTTP_VERSION);
@@ -381,14 +383,14 @@ void* accept_request(void *arg)
 #else
 	int sock_client = (int)arg; //sock
 #endif
-	char * query_string = NULL; //用于提取参数
-	char method[_COMM_SIZE_ / 10]; //用于提取方法
+	char *query_string = NULL; //用于提取参数,query
+	char method[_COMM_SIZE_ / 10]; //用于提取方法,method
 	memset(method, '\0', sizeof(method));
 	char url[_COMM_SIZE_]; //用于提取url
 	memset(url, '\0', sizeof(url));
 	char buffer[_COMM_SIZE_/10]; //读取数据
 	memset(buffer, '\0', sizeof(buffer));
-	char path[_COMM_SIZE_]; //路径
+	char path[_COMM_SIZE_]; //路径,path
 	memset(path, '\0', sizeof(path));
 #ifdef _DEBUG_ 
 	while( get_line(sock_client, buffer, sizeof(buffer)) > 0 )
@@ -484,6 +486,7 @@ void* accept_request(void *arg)
 		{
 			//do nothing 
 		}
+		
 		//根据cgi的值确定行为（采取何种方式）
 		if(cgi)
 		{//需要交给cgi执行
@@ -517,13 +520,13 @@ int start(short port)
 	}
 	//设置为ip地址可复用
 	int flag = 1;
-	setsockopt(listen_sock, SOL_SOCKET, SO_REUSEADDR, &flag,sizeof(flag));
+	setsockopt(listen_sock, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag));
 	//完成sockaddr_in参数
 	struct sockaddr_in local;
 	local.sin_family = AF_INET;
 	local.sin_port = htons(port);
 	local.sin_addr.s_addr = htonl(INADDR_ANY); //自动绑定ip
-	socklen_t len =sizeof(local);	
+	socklen_t len = sizeof(local);
   	//bind
 	if( bind(listen_sock, (struct sockaddr*)&local, len) == -1 )
 	{
@@ -552,13 +555,17 @@ void setnoblock(int newsock)
 }
 
 
+#ifdef USE_LIBEVENT
 void create_ptherad(int newfd, short event, void *arg)
 {//libevent
 	pthread_t pid;
 	//struct arg myarg;
 	myarg.fd = newfd;
 	myarg.myevent = (struct event*)arg;
+	tpool_add_work(accept_request, (void*)&myarg); //thread_pool
+	/* becase of use thread_pool 
 	pthread_create(&pid, NULL, accept_request, (void*)&myarg);
+	*/
 }
 
 void oneAccept(int sock, short ievent, void *arg)
@@ -576,7 +583,7 @@ void oneAccept(int sock, short ievent, void *arg)
 	event_base_set(base, request);
 	event_add(request,NULL);
 }
-
+#endif
 
 int main(int argc, char* argv[])
 {
@@ -590,8 +597,8 @@ int main(int argc, char* argv[])
 	
 	//使用多线程版本	
 #ifdef UES_THREAD
-	struct sockaddr_in client;
-	socklen_t len =0;
+	struct sockaddr_in client; //用来保存链接对方的协议地址
+	socklen_t len = 0;
     while(1) 
     {
    		 int new_sock = accept(sock, (struct sockaddr*)&client, &len);	
@@ -609,6 +616,12 @@ int main(int argc, char* argv[])
 
    	//使用epoll多路复用处理就绪，使用多线程处理请求
 #ifdef USE_EPOLL
+	/*add pthread_pool*/
+	if(tpool_create(10) != 0){
+		printf("tpool_create failed\n");
+		exit(1);
+	}	
+	/*end pthread_pool*/
 	struct epoll_event ready_event[MAX_EVENT_NUM];
 	struct epoll_event _event;
 	_event.events = EPOLLIN;
@@ -669,11 +682,16 @@ int main(int argc, char* argv[])
 			else if( (ready_event[i].events & EPOLLIN) && (ready_event[i].events & EPOLLOUT))
 			{
 				//printf("join this patr,fd is %d,ready_fd is %d \n",fd,ready_event[i].data.fd);
+				
+			/* add pthread_pool 2016.9.2
 				pthread_t new_thread;
 				if(pthread_create(&new_thread, NULL, accept_request, (void*)ready_event[i].data.fd) == 0)
 				{
 					print_debug("pthread success\n");
 				}
+			*/ 
+				tpool_add_work(accept_request, (void*)ready_event[i].data.fd);
+
 				//删除fd上的注册事件	
 				epoll_ctl(epollfd, EPOLL_CTL_DEL, fd, NULL);	
 			}
@@ -682,6 +700,13 @@ int main(int argc, char* argv[])
 #endif
 
 #ifdef USE_LIBEVENT
+	/*add pthread_pool 2016.9.2 */
+	if(tpool_create(10) != 0){
+		printf("tpool_create failed\n");
+		exit(1);
+	}	
+	/*end pthread_pool*/
+
 	base = event_base_new();
 	struct event evlisten;
 	//设置事件
